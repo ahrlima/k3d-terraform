@@ -1,7 +1,7 @@
 FROM node:18-alpine AS builder
 
-RUN addgroup -g 1000 appgroup \
-    && adduser -u 1000 -G appgroup -s /bin/sh -D appuser
+RUN addgroup appgroup \
+    && adduser -G appgroup -s /bin/sh -D appuser
 
 WORKDIR /app
 
@@ -16,8 +16,8 @@ COPY . .
 
 FROM node:18-alpine AS production
 
-RUN addgroup -g 1000 appgroup \
-    && adduser -u 1000 -G appgroup -s /bin/sh -D appuser
+RUN addgroup appgroup \
+    && adduser -G appgroup -s /bin/sh -D appuser
 
 WORKDIR /usr/src/app
 RUN chown appuser:appgroup /usr/src/app
