@@ -5,4 +5,4 @@ k3d_cluster_lb_port = 80
 k3d_host_lb_port    = 8080
 server_count        = 1     # Increase to >=3 for HA cluster
 agent_count         = 2
-k3s_version         = "v1.19.8-k3s1"
+#k3s_version         = "v1.19.8-k3s1"

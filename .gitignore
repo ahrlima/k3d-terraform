@@ -1,7 +1,48 @@
-#Terraform
+# -------------------------------------------------------------------
+# ARQUIVOS DO TERRAFORM
+# -------------------------------------------------------------------
+# Diretório de cache e módulos (gerado por terraform init)
 .terraform/
-plan
+# Arquivo de estado local (CRÍTICO - NUNCA versionar em produção)
+*.tfstate
+*.tfstate.*
+# Arquivos de plano (resultados de terraform plan)
+*tfplan
+*tfplan.binary
+# Diretórios de estado de workspaces
 terraform.tfstate.d/
-.hcl*
+# Lock file gerado pelo TF >= 0.14
 .terraform.lock.hcl
-*tfplan*
+
+# Arquivos de crash/logs
+crash.log
+
+# -------------------------------------------------------------------
+# FERRAMENTAS LOCAIS DE DESENVOLVIMENTO
+# -------------------------------------------------------------------
+# Binários de ferramentas (se instaladas localmente para k3d ou kubectl)
+# Pode ser removido se você usa brew, apt, etc.
+k3d
+kubectl
+k3s
+
+# -------------------------------------------------------------------
+# ARQUIVOS DE BUILD E AMBIENTE (Node.js e Docker)
+# -------------------------------------------------------------------
+# Módulos Node.js
+node_modules
+# Arquivos gerados por builds do frontend/backend
+dist
+build
+tmp
+
+# -------------------------------------------------------------------
+# ARQUIVOS ESPECÍFICOS DO SISTEMA OPERACIONAL
+# -------------------------------------------------------------------
+# Arquivos de configurações do VS Code / IDEs
+.vscode/
+.idea/
+# Arquivos do macOS
+.DS_Store
+# Arquivos do Windows
+Thumbs.db

@@ -1,5 +1,5 @@
 output "clusters_created" {
-  value = var.k3d_cluster_name
+  value = var.k3d_cluster_name[0]
 }
 output "k3d_cluster_ip" {
   value = var.k3d_cluster_ip

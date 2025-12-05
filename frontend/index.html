@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frontend Dummy</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    #data-container { margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <h1>Aplicação Frontend Dummy</h1>
+  <p>Clique no botão para buscar dados do backend.</p>
+  <button id="fetch-button">Buscar Dados</button>
+
+  <div id="data-container" style="display: none;">
+    <h2>Dados Recebidos:</h2>
+    <pre id="data"></pre>
+  </div>
+
+  <script>
+    document.getElementById('fetch-button').addEventListener('click', () => {
+      const dataContainer = document.getElementById('data-container');
+      const dataEl = document.getElementById('data');
+
+      // Em um ambiente Kubernetes, 'backend-service' seria o nome do serviço do backend.
+      // Para testes locais com proxy, '/api/dados' pode funcionar.
+      // Vamos usar um caminho relativo que o Ingress irá rotear.
+      fetch('/api/dados')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Erro na rede: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          dataEl.textContent = JSON.stringify(data, null, 2);
+          dataContainer.style.display = 'block';
+        })
+        .catch(error => {
+          dataEl.textContent = `Erro ao buscar dados: ${error.message}`;
+          dataContainer.style.display = 'block';
+        });
+    });
+  </script>
+
+</body>
+</html>

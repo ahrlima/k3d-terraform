@@ -1,7 +1,7 @@
 variable "k3s_version" {
   description = "The K3s version to use"
   type        = string
-  default     = "latest"
+  default     = "v1.28.2-k3s1" # Pin to a specific stable version
 }
 
 variable "k3d_cluster_name" {
