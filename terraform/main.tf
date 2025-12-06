@@ -1,41 +1,63 @@
-provider "docker" {}
-provider "random" {}
-
-resource "random_integer" "port" {
-  min = 8000
-  max = 8099
-}
-
 locals {
-  host_lb_port = (var.k3d_host_lb_port != "" ? var.k3d_host_lb_port : random_integer.port.result)
-}
-
-resource "null_resource" "cluster" {
-  for_each = toset(var.k3d_cluster_name)
-  triggers = {
-    agent_count   = var.agent_count
-    server_count  = var.server_count
-    ip            = var.k3d_cluster_ip
-    port          = var.k3d_cluster_port
-    k3s_version   = var.k3s_version
-  }
-  provisioner "local-exec" {
-    command = "k3d cluster create ${each.key} --agents ${var.agent_count} --servers ${var.server_count} --api-port ${var.k3d_cluster_ip}:${var.k3d_cluster_port} --port ${local.host_lb_port}:${var.k3d_cluster_lb_port}@loadbalancer --image rancher/k3s:${var.k3s_version}"
+  environments = {
+    dev = {
+      server_count = 1
+      agent_count  = 1
+      k3s_version  = "v1.31.5-k3s1"
+    }
+    prod = {
+      server_count = 1
+      agent_count  = 1
+      k3s_version  = "v1.31.5-k3s1"
+    }
   }
 }
 
-resource "null_resource" "cluster_delete" {
-  for_each = toset(var.k3d_cluster_name)
-  provisioner "local-exec" {
-    command = "k3d cluster delete ${each.key}"
-    when    = destroy
+# Passo 1: Construir as imagens (apenas uma vez)
+module "docker_build" {
+  source = "./modules/docker_build"
+  app_source_paths = {
+    backend  = "${path.root}/../app/backend"
+    frontend = "${path.root}/../app/frontend"
   }
 }
 
-data "docker_network" "k3d" {
-  for_each = toset(var.k3d_cluster_name)
-  depends_on = [
-    null_resource.cluster
-  ]
-  name = "k3d-${each.key}"
+# Passo 2 e 3: Criar clusters e fazer deploy sequencialmente para aliviar a carga no PC.
+
+# --- Ambiente DEV ---
+module "k3d_cluster_dev" {
+  source   = "./modules/k3d-cluster"
+  k3d_cluster_name = ["dev"]
+  server_count     = local.environments.dev.server_count
+  agent_count      = local.environments.dev.agent_count
+  k3s_version      = local.environments.dev.k3s_version
+}
+
+module "app_deploy_dev" {
+  source   = "./modules/app_deployer"
+  depends_on = [module.docker_build, module.k3d_cluster_dev]
+
+  cluster_name   = "dev"
+  namespace      = "dev-k8s"
+  manifests_path = "${path.root}/../k8s/dev"
+}
+
+# --- Ambiente PROD ---
+# O depends_on garante que o cluster de produção só começará a ser criado
+# após o deploy no cluster de desenvolvimento ter sido concluído.
+module "k3d_cluster_prod" {
+  source           = "./modules/k3d-cluster"
+  depends_on       = [module.app_deploy_dev]
+  k3d_cluster_name = ["prod"]
+  server_count     = local.environments.prod.server_count
+  agent_count      = local.environments.prod.agent_count
+  k3s_version      = local.environments.prod.k3s_version
+}
+
+module "app_deploy_prod" {
+  source           = "./modules/app_deployer"
+  depends_on       = [module.k3d_cluster_prod]
+  cluster_name     = "prod"
+  namespace        = "prod-k8s"
+  manifests_path   = "${path.root}/../k8s/prod"
 }
